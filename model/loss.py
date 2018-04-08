@@ -62,8 +62,9 @@ class FocalLoss(nn.Module):
         return loss.sum()
 
     def focal_loss2(self, x, y, gamma=2, alpha=0.25):
-        y_hat = F.softmax(x, dim=1)
-        l = -(1-y_hat).pow(gamma) * y_hat.log()
+        # y_hat = F.softmax(x, dim=1)
+        # l = -(1-y_hat).pow(gamma) * torch.log(y_hat)
+        l = -F.log_softmax(x, dim=1)
         t = one_hot_embedding(y.data.cpu(), 1 + self.num_classes)
         t = t[:, 1:]
         t = Variable(t).type(self.FloatTensor)
