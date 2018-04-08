@@ -23,7 +23,8 @@ class FocalLoss(nn.Module):
         Return:
           (tensor) focal loss.
         """
-        t = one_hot_embedding(y.data.cpu(), self.num_classes)
+        t = one_hot_embedding(y.data.cpu(), self.num_classes+1)
+        t = t[:, 1:]
         t = Variable(t).type(self.FloatTensor)  # [N,D]
         p = F.softmax(x, dim=1)  # [N,D]
         pt = (p * t).sum(1)  # [N,]
