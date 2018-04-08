@@ -12,7 +12,7 @@ class FocalLoss(nn.Module):
         self.num_classes = num_classes
         self.FloatTensor = torch.cuda.FloatTensor if use_gpu else torch.FloatTensor
 
-    def focal_loss(self, x, y):
+    def focal_loss(self, x, y, gamma=2):
         """
         Focal loss.
 
@@ -23,51 +23,13 @@ class FocalLoss(nn.Module):
         Return:
           (tensor) focal loss.
         """
-        alpha = 0.25
-        gamma = 2
+        t = one_hot_embedding(y.data.cpu(), self.num_classes)
+        t = Variable(t).type(self.FloatTensor)  # [N,D]
+        p = F.softmax(x, dim=1)  # [N,D]
+        pt = (p * t).sum(1)  # [N,]
+        loss = F.cross_entropy(x, y, reduce=False)  # [N,]
+        loss = (1 - pt).pow(gamma) * loss
 
-        t = one_hot_embedding(y.data.cpu(), 1+self.num_classes)  # [N,21]
-        t = t[:, 1:]  # exclude background
-        t = Variable(t).type(self.FloatTensor)  # [N,20]
-
-        # p = x.sigmoid()
-        p = torch.sigmoid(x)
-        pt = p*t + (1-p)*(1-t)         # pt = p if t > 0 else 1-p
-        w = alpha*t + (1-alpha)*(1-t)  # w = alpha if t > 0 else 1-alpha
-        w = w * (1-pt).pow(gamma)
-        return F.binary_cross_entropy_with_logits(x, t, w, size_average=False)
-
-    def focal_loss_alt(self, x, y):
-        """
-        Focal loss alternative.
-
-        Args:
-          x: (tensor) sized [N,D].
-          y: (tensor) sized [N,].
-
-        Return:
-          (tensor) focal loss.
-        """
-        alpha = 0.25
-
-        t = one_hot_embedding(y.data.cpu(), 1+self.num_classes)
-        t = t[:, 1:]
-        t = Variable(t).type(self.FloatTensor)
-
-        xt = x*(2*t-1)  # xt = x if t > 0 else -x
-        pt = (2*xt+1).sigmoid()
-
-        w = alpha*t + (1-alpha)*(1-t)
-        loss = -w*pt.log() / 2
-        return loss.sum()
-
-    def focal_loss2(self, x, y, gamma=2, alpha=0.25):
-        y_hat = F.softmax(x, dim=1)
-        l = -(1-y_hat).pow(gamma) * y_hat.log()
-        t = one_hot_embedding(y.data.cpu(), 1 + self.num_classes)
-        t = t[:, 1:]
-        t = Variable(t).type(self.FloatTensor)
-        loss = t*l
         return loss.sum()
 
     def forward(self, loc_preds, loc_targets, cls_preds, cls_targets):
@@ -114,6 +76,4 @@ if __name__ == '__main__':
     y[0] = 1
     x, y = Variable(x), Variable(y)
     z1 = f.focal_loss(x, y)
-    z2 = f.focal_loss_alt(x, y)
-    z3 = f.focal_loss2(x, y)
-    print(z1, z2, z3)
+    print(z1)
