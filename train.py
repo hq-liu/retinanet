@@ -69,8 +69,8 @@ if __name__ == '__main__':
                         action='store_true', help='resume from checkpoint')
     args = parser.parse_args()
 
-    use_gpu = torch.cuda.is_available()
-    # use_gpu = False
+    # use_gpu = torch.cuda.is_available()
+    use_gpu = False
     best_loss = float('inf')  # best test loss
     start_epoch = 0  # start from epoch 0 or last epoch
 
@@ -82,15 +82,15 @@ if __name__ == '__main__':
     ])
 
     trainset = ListDataset(root='D:\VOCdevkit\VOC2007\JPEGImages',
-                           list_file='./data/voc07_train.txt', train=True, transform=transform, input_size=300)
+                           list_file='./data/voc07_train.txt', train=True, transform=transform, input_size=100)
     trainloader = DataLoader(trainset, batch_size=2, shuffle=True, num_workers=8, collate_fn=trainset.collate_fn)
 
     testset = ListDataset(root='D:\VOCdevkit\VOC2007\JPEGImages',
-                          list_file='./data/voc07_test.txt', train=False, transform=transform, input_size=300)
+                          list_file='./data/voc07_test.txt', train=False, transform=transform, input_size=100)
     testloader = DataLoader(testset, batch_size=16, shuffle=False, num_workers=8, collate_fn=testset.collate_fn)
 
     # Model
-    net = RetinaNet_Shuffle()
+    net = RetinaNet_Shuffle(5)
     net.load_state_dict(torch.load('./model/retina_net_shuffle.pth'))
     if args.resume:
         print('==> Resuming from checkpoint..')
@@ -103,7 +103,7 @@ if __name__ == '__main__':
     if use_gpu:
         net.cuda()
 
-    criterion = FocalLoss(use_gpu=use_gpu)
+    criterion = FocalLoss(5, use_gpu=use_gpu)
     optimizer = optim.Adam(net.parameters(), lr=args.lr, weight_decay=1e-4)
 
     for epoch in range(start_epoch, start_epoch + 200):
