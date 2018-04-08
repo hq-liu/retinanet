@@ -51,7 +51,7 @@ def test(epoch):
     if test_loss < best_loss:
         print('Saving..')
         state = {
-            'net': net.module.state_dict(),
+            'net': net.state_dict(),
             'loss': test_loss,
             'epoch': epoch,
         }
