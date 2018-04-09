@@ -27,11 +27,11 @@ class FocalLoss(nn.Module):
           (tensor) focal loss.
         """
         t = one_hot_embedding(y.data.cpu(), self.num_classes+1)
-        t = t[1:, 1:]
         t = Variable(t).type(self.FloatTensor)  # [N,D]
         p = F.softmax(x, dim=1)  # [N,D]
         pt = (p * t).sum(1)  # [N,]
-        loss = -alpha*(1-pt).pow(gamma)*torch.log(pt)
+        log_pt = F.log_softmax(pt)
+        loss = -alpha*(1-pt).pow(gamma)*log_pt
         return loss.mean()
 
     def forward(self, loc_preds, loc_targets, cls_preds, cls_targets):
