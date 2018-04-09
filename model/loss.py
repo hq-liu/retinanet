@@ -15,6 +15,9 @@ class FocalLoss(nn.Module):
     def focal_loss(self, x, y, gamma=2, alpha=0.25):
         """
         Focal loss.
+        FL(p_t) = -alpha * (1 - p_t)**gamma * log(p_t)\
+        where p_i = exp(s_i) / sum_j exp(s_j), t is the target (ground truth) class, and
+        s_j is the unnormalized score for class j.
 
         Args:
           x: (tensor) sized [N,D].
@@ -28,9 +31,6 @@ class FocalLoss(nn.Module):
         t = Variable(t).type(self.FloatTensor)  # [N,D]
         p = F.softmax(x, dim=1)  # [N,D]
         pt = (p * t).sum(1)  # [N,]
-        print(t, pt)
-        # loss = F.cross_entropy(x, y, reduce=False)  # [N,]
-        # loss = (1 - pt).pow(2) * loss
         loss = -alpha*(1-pt).pow(gamma)*torch.log(pt)
         return loss.mean()
 
