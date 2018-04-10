@@ -12,7 +12,8 @@ from model.fpn_shuffle_net import FPN_ShuffleNet
 from model.retina_shuffle import RetinaNet_Shuffle
 
 
-def convert_res50(base_name='resnet50-19c8e357.pth', retina_name='retina_net_res50.pth'):
+def convert_res50(base_name='resnet50-19c8e357.pth', retina_name='retina_net_res50.pth',
+                  num_classes=20):
     print('Loading pretrained ResNet50 model..')
     d = torch.load(base_name)
 
@@ -24,7 +25,7 @@ def convert_res50(base_name='resnet50-19c8e357.pth', retina_name='retina_net_res
             dd[k] = d[k]
 
     print('Saving RetinaNet..')
-    net = RetinaNet()
+    net = RetinaNet(num_classes=num_classes)
     for m in net.modules():
         if isinstance(m, nn.Conv2d):
             init.normal(m.weight, mean=0, std=0.01)
@@ -42,7 +43,8 @@ def convert_res50(base_name='resnet50-19c8e357.pth', retina_name='retina_net_res
     print('Done!')
 
 
-def convert_shuffle_net(base_name='shufflenet.pth.tar', retina_name='retina_net_shuffle.pth'):
+def convert_shuffle_net(base_name='shufflenet.pth.tar', retina_name='retina_net_shuffle.pth',
+                        num_classes=20):
     print('Loading pretrained shuffle_net model..')
     d = torch.load(base_name, map_location=lambda storage, loc: storage)['state_dict']
 
@@ -54,7 +56,7 @@ def convert_shuffle_net(base_name='shufflenet.pth.tar', retina_name='retina_net_
             dd[k] = d[k]
 
     print('Saving RetinaNet..')
-    net = RetinaNet_Shuffle()
+    net = RetinaNet_Shuffle(num_classes=num_classes)
     for m in net.modules():
         if isinstance(m, nn.Conv2d):
             init.normal(m.weight, mean=0, std=0.01)
