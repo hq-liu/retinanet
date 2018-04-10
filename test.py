@@ -10,7 +10,7 @@ from PIL import Image, ImageDraw
 
 
 print('Loading model..')
-net = RetinaNet_Shuffle(5)
+net = RetinaNet_Shuffle()
 net.load_state_dict(torch.load('./checkpoint/ckpt.pth')['net'])
 net.eval()
 
@@ -20,7 +20,7 @@ transform = transforms.Compose([
 ])
 
 print('Loading image..')
-img = Image.open(r'E:\md\1(30).jpg')
+img = Image.open(r'D:\VOCdevkit\VOC2007\JPEGImages\000005.jpg')
 w = h = 300
 img = img.resize((w, h))
 
@@ -39,11 +39,11 @@ print(b.max())
 c = torch.sort(b)
 
 
-# print('Decoding..')
-# encoder = DataEncoder()
-# boxes, labels = encoder.decode(loc_preds.data.squeeze(), cls_preds.data.squeeze(), (w, h))
-#
-# draw = ImageDraw.Draw(img)
-# for box in boxes:
-#     draw.rectangle(list(box), outline='red')
-# img.show()
+print('Decoding..')
+encoder = DataEncoder()
+boxes, labels, scores = encoder.decode(loc_preds.data.squeeze(), cls_preds.data.squeeze(), (w, h))
+
+draw = ImageDraw.Draw(img)
+for box in boxes:
+    draw.rectangle(list(box), outline='red')
+img.show()

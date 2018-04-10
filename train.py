@@ -31,6 +31,7 @@ def train(epoch):
 
         train_loss += loss.data[0]
         print('train_loss: %.3f | avg_loss: %.3f' % (loss.data[0], train_loss/(batch_idx+1)))
+        # torch.cuda.empty_cache()
 
 
 def test(epoch):
@@ -72,7 +73,7 @@ if __name__ == '__main__':
     parser.add_argument('--device', default=0, help='Which gpu is using')
     parser.add_argument('--model', default='shufflenet', help='shufflenet or res50')
     parser.add_argument('--epoch', default=200, help='max training epochs')
-    parser.add_argument('--batch_size', default=1, help='batch size')
+    parser.add_argument('--batch_size', default=4, help='batch size')
     parser.add_argument('--input_size', default=300, help="input images' size")
     parser.add_argument('--num_classes', default=20, help='Number of classes')
     args = parser.parse_args()
@@ -90,14 +91,14 @@ if __name__ == '__main__':
         transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
     ])
 
-    trainset = ListDataset(root='D:\VOCdevkit\VOC2007\JPEGImages',
+    trainset = ListDataset(root=r'D:\VOCdevkit\VOC2007\JPEGImages',
                            list_file='./data/voc07_train.txt',
                            train=True, transform=transform, input_size=args.input_size)
     trainloader = DataLoader(trainset, batch_size=args.batch_size,
                              shuffle=True, num_workers=8, collate_fn=trainset.collate_fn)
 
-    testset = ListDataset(root='D:\VOCdevkit\VOC2007\JPEGImages',
-                          list_file='./data/voc07_test.txt',
+    testset = ListDataset(root=r'D:\VOCdevkit\VOC2007\JPEGImages',
+                          list_file='./data/voc07_train.txt',
                           train=False, transform=transform, input_size=args.input_size)
     testloader = DataLoader(testset, batch_size=args.batch_size,
                             shuffle=False, num_workers=8, collate_fn=testset.collate_fn)

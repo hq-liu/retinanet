@@ -130,7 +130,6 @@ class DataEncoder:
             score = score[mask]
 
             keep = nms(box, score, nms_thresh)
-            print(keep)
             boxes.append(box[keep])
             labels.append(torch.LongTensor(len(box[keep])).fill_(i))
             scores.append(score[keep])
