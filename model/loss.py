@@ -31,13 +31,13 @@ class FocalLoss(nn.Module):
         t = Variable(t).type(self.FloatTensor)  # [N,D]
         p = F.softmax(x, dim=1)  # [N,D]
         pt = torch.sum(p * t, dim=1, keepdim=True)  # [N,]
-        log_pt = F.log_softmax(x, dim=1)
+        log_pt = torch.sum(F.log_softmax(x, dim=1)*t, dim=1, keepdim=True)
         loss = -alpha*(1 - pt).pow(gamma)*log_pt
         loss = loss.squeeze(1)
         loss = torch.mean(loss)
         return loss
 
-    def forward(self, loc_preds, loc_targets, cls_preds, cls_targets, beta=0.1):
+    def forward(self, loc_preds, loc_targets, cls_preds, cls_targets):
         """
         Compute loss between (loc_preds, loc_targets) and (cls_preds, cls_targets).
 
@@ -70,18 +70,13 @@ class FocalLoss(nn.Module):
         masked_cls_preds = cls_preds[mask].view(-1, self.num_classes+1)
         cls_loss = self.focal_loss(masked_cls_preds, cls_targets[pos_neg])
 
-        print('loc_loss: %.3f | cls_loss: %.3f' % (loc_loss.data[0], cls_loss.data[0]), end=' | ')
+        print('loc_loss: %.3f | cls_loss: %.3f' % (loc_loss.data[0]/num_pos, cls_loss.data[0]), end=' | ')
         if loc_loss.data[0] == 0:
-            loss = cls_loss/num_pos
+            loss = cls_loss
         else:
-            loss = (beta*loc_loss+cls_loss)/num_pos
+            loss = loc_loss/num_pos+cls_loss
         return loss
 
 
 if __name__ == '__main__':
-    loss = np.load('loss.npy')
-    pt = np.load('pt.npy')
-    p = np.load('p.npy')
-    x = np.load('x.npy')
-    # loss = -0.25 * (1 - pt)**(2) * np.log(pt)]
-    print(np.min(pt))
+    pass

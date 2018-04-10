@@ -136,7 +136,7 @@ if __name__ == '__main__':
         net.cuda()
 
     criterion = FocalLoss(num_classes=args.num_classes, use_gpu=use_gpu)
-    optimizer = optim.Adam(net.parameters(), lr=args.lr, weight_decay=1e-4)
+    optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=1e-4)
 
     for epoch in range(start_epoch, start_epoch + args.epoch):
         train(epoch)

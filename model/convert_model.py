@@ -46,7 +46,7 @@ def convert_shuffle_net(base_name='shufflenet.pth.tar', retina_name='retina_net_
     print('Loading pretrained shuffle_net model..')
     d = torch.load(base_name, map_location=lambda storage, loc: storage)['state_dict']
 
-    print('Loading into FPN50..')
+    print('Loading into FPN_shuffle_net..')
     fpn = FPN_ShuffleNet()
     dd = fpn.state_dict()
     for k in d.keys():
