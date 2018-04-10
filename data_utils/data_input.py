@@ -84,10 +84,10 @@ class ListDataset(data.Dataset):
         if self.train:
             img, boxes = random_flip(img, boxes)
             img, boxes = random_crop(img, boxes)
-            img, boxes = resize(img, boxes, (size,size))
+            img, boxes = resize(img, boxes, (size, size))
         else:
             img, boxes = resize(img, boxes, size)
-            img, boxes = center_crop(img, boxes, (size,size))
+            img, boxes = center_crop(img, boxes, (size, size))
 
         img = self.transform(img)
         return img, boxes, labels

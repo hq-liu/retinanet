@@ -68,10 +68,17 @@ if __name__ == '__main__':
     parser.add_argument('--lr', default=1e-3, type=float, help='learning rate')
     parser.add_argument('--resume', '-r', default=False,
                         action='store_true', help='resume from checkpoint')
+    parser.add_argument('--gpu', default=False, help='Use Gpu or not')
+    parser.add_argument('--device', default=0, help='Which gpu is using')
+    parser.add_argument('--model', default='shufflenet', help='shufflenet or res50')
+    parser.add_argument('epoch', default=200, help='max training epochs')
+    parser.add_argument('batch_size', default=16, help='batch size')
+    parser.add_argument('input_size', default=300, help="input images' size")
     args = parser.parse_args()
 
-    # use_gpu = torch.cuda.is_available()
-    use_gpu = False
+    use_gpu = args.gpu
+    if use_gpu:
+        torch.cuda.set_device(args.device)
     best_loss = float('inf')  # best test loss
     start_epoch = 0  # start from epoch 0 or last epoch
 
@@ -83,18 +90,24 @@ if __name__ == '__main__':
     ])
 
     trainset = ListDataset(root='D:\VOCdevkit\VOC2007\JPEGImages',
-                           list_file='./data/voc07_train.txt', train=True, transform=transform, input_size=100)
-    trainloader = DataLoader(trainset, batch_size=2, shuffle=True, num_workers=8, collate_fn=trainset.collate_fn)
+                           list_file='./data/voc07_train.txt',
+                           train=True, transform=transform, input_size=args.input_size)
+    trainloader = DataLoader(trainset, batch_size=args.batch_size,
+                             shuffle=True, num_workers=8, collate_fn=trainset.collate_fn)
 
     testset = ListDataset(root='D:\VOCdevkit\VOC2007\JPEGImages',
-                          list_file='./data/voc07_test.txt', train=False, transform=transform, input_size=100)
-    testloader = DataLoader(testset, batch_size=16, shuffle=False, num_workers=8, collate_fn=testset.collate_fn)
+                          list_file='./data/voc07_test.txt',
+                          train=False, transform=transform, input_size=args.input_size)
+    testloader = DataLoader(testset, batch_size=args.batch_size,
+                            shuffle=False, num_workers=8, collate_fn=testset.collate_fn)
 
     # Model
-    # net = RetinaNet_Shuffle()
-    # net.load_state_dict(torch.load('./model/retina_net_shuffle.pth'))
-    net = RetinaNet()
-    net.load_state_dict(torch.load('./model/retina_net_res50.pth'))
+    if args.model == 'res50':
+        net = RetinaNet_Shuffle()
+        net.load_state_dict(torch.load('./model/retina_net_shuffle.pth'))
+    else:
+        net = RetinaNet()
+        net.load_state_dict(torch.load('./model/retina_net_res50.pth'))
     if args.resume:
         print('==> Resuming from checkpoint..')
         checkpoint = torch.load('./checkpoint/ckpt.pth')
@@ -109,6 +122,6 @@ if __name__ == '__main__':
     criterion = FocalLoss(use_gpu=use_gpu)
     optimizer = optim.Adam(net.parameters(), lr=args.lr, weight_decay=1e-4)
 
-    for epoch in range(start_epoch, start_epoch + 200):
+    for epoch in range(start_epoch, start_epoch + args.epoch):
         train(epoch)
         test(epoch)

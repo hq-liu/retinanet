@@ -119,10 +119,10 @@ def random_flip(img, boxes):
     if random.random() < 0.5:
         img = img.transpose(Image.FLIP_LEFT_RIGHT)
         w = img.width
-        xmin = w - boxes[:,2]
-        xmax = w - boxes[:,0]
-        boxes[:,0] = xmin
-        boxes[:,2] = xmax
+        xmin = w - boxes[:, 2]
+        xmax = w - boxes[:, 0]
+        boxes[:, 0] = xmin
+        boxes[:, 2] = xmax
     return img, boxes
 
 
