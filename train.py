@@ -117,7 +117,7 @@ if __name__ == '__main__':
 
     # Model
     if args.model == 'shufflenet':
-        # convert_shuffle_net()
+        convert_shuffle_net()
         net = RetinaNet_Shuffle(num_classes=args.num_classes)
         net.load_state_dict(torch.load('./model/retina_net_shuffle.pth'))
     else:
