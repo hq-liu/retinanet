@@ -96,7 +96,7 @@ class DataEncoder:
         cls_targets[ignore] = -1  # for now just mark ignored to -1
         return loc_targets, cls_targets
 
-    def decode(self, loc_preds, cls_preds, input_size):
+    def decode(self, loc_preds, cls_preds, input_size, score_thresh=0.6, nms_thresh=0.45):
         """
         Decode outputs back to bounding box locations and class labels.
 
@@ -109,26 +109,33 @@ class DataEncoder:
           boxes: (tensor) decode box locations, sized [#obj,4].
           labels: (tensor) class labels for each box, sized [#obj,].
         """
-        CLS_THRESH = 0.5
-        NMS_THRESH = 0.5
+        variances = (0.1, 0.2)
+        default_boxes = self._get_anchor_boxes(input_size)
+        xy = loc_preds[:, :2] * variances[0] * default_boxes[:, 2:] + default_boxes[:, :2]
+        wh = torch.exp(loc_preds[:, 2:] * variances[1]) * default_boxes[:, 2:]
+        box_preds = torch.cat([xy - wh / 2, xy + wh / 2], 1)
 
-        input_size = torch.FloatTensor([input_size,input_size]) if isinstance(input_size, int) \
-            else torch.FloatTensor(input_size)
-        anchor_boxes = self._get_anchor_boxes(input_size)
+        boxes = []
+        labels = []
+        scores = []
+        num_classes = cls_preds.size(1)
+        for i in range(num_classes - 1):
+            score = cls_preds[:, i + 1]  # class i corresponds to (i+1) column
+            mask = score > score_thresh
+            if not mask.any():
+                continue
+            box = box_preds[mask.nonzero().squeeze()]
+            score = score[mask]
 
-        loc_xy = loc_preds[:, :2]
-        loc_wh = loc_preds[:, 2:]
+            keep = nms(box, score, nms_thresh)
+            boxes.append(box[keep])
+            labels.append(torch.LongTensor(len(box[keep])).fill_(i))
+            scores.append(score[keep])
 
-        xy = loc_xy * anchor_boxes[:, 2:] + anchor_boxes[:, :2]
-        wh = loc_wh.exp() * anchor_boxes[:, 2:]
-        boxes = torch.cat([xy-wh/2, xy+wh/2], 1)  # [#anchors,4]
-
-        output = F.softmax(cls_preds, dim=2)
-        score, labels = output.max(2)          # [#anchors,]
-        score, labels = score.squeeze(), labels.squeeze()
-        ids = labels.data.nonzero().squeeze()        # [#obj,]
-        keep = nms(boxes[ids], score[ids].data, threshold=NMS_THRESH)
-        return boxes[ids][keep], labels[ids][keep]
+        boxes = torch.cat(boxes, 0)
+        labels = torch.cat(labels, 0)
+        scores = torch.cat(scores, 0)
+        return boxes, labels, scores
 
 
 if __name__ == '__main__':
