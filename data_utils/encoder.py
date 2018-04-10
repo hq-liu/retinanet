@@ -91,8 +91,8 @@ class DataEncoder:
         loc_targets = torch.cat([loc_xy, loc_wh], 1)
         cls_targets = 1 + labels[max_ids]
 
-        cls_targets[max_ious < 0.5] = 0
-        ignore = (max_ious > 0.4) & (max_ious < 0.5)  # ignore ious between [0.4,0.5]
+        cls_targets[max_ious < 0.4] = 0
+        ignore = (max_ious > 0.3) & (max_ious < 0.5)  # ignore ious between [0.4,0.5]
         cls_targets[ignore] = -1  # for now just mark ignored to -1
         return loc_targets, cls_targets
 
@@ -110,6 +110,8 @@ class DataEncoder:
           labels: (tensor) class labels for each box, sized [#obj,].
         """
         variances = (0.1, 0.2)
+        input_size = torch.FloatTensor([input_size, input_size]) if isinstance(input_size, int) \
+            else torch.FloatTensor(input_size)
         default_boxes = self._get_anchor_boxes(input_size)
         xy = loc_preds[:, :2] * variances[0] * default_boxes[:, 2:] + default_boxes[:, :2]
         wh = torch.exp(loc_preds[:, 2:] * variances[1]) * default_boxes[:, 2:]
@@ -128,6 +130,7 @@ class DataEncoder:
             score = score[mask]
 
             keep = nms(box, score, nms_thresh)
+            print(keep)
             boxes.append(box[keep])
             labels.append(torch.LongTensor(len(box[keep])).fill_(i))
             scores.append(score[keep])

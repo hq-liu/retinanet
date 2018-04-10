@@ -9,6 +9,7 @@ from model.retina_shuffle import RetinaNet_Shuffle
 from model.retina_net import RetinaNet
 from data_utils.data_input import ListDataset
 from torch.autograd import Variable
+from model.convert_model import convert_res50, convert_shuffle_net
 
 
 # Training
@@ -62,7 +63,6 @@ def test(epoch):
         best_loss = test_loss
 
 
-# for epoch in range(start_epoch, start_epoch+200):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch RetinaNet Training')
     parser.add_argument('--lr', default=1e-3, type=float, help='learning rate')
@@ -71,9 +71,10 @@ if __name__ == '__main__':
     parser.add_argument('--gpu', default=False, help='Use Gpu or not')
     parser.add_argument('--device', default=0, help='Which gpu is using')
     parser.add_argument('--model', default='shufflenet', help='shufflenet or res50')
-    parser.add_argument('epoch', default=200, help='max training epochs')
-    parser.add_argument('batch_size', default=16, help='batch size')
-    parser.add_argument('input_size', default=300, help="input images' size")
+    parser.add_argument('--epoch', default=200, help='max training epochs')
+    parser.add_argument('--batch_size', default=1, help='batch size')
+    parser.add_argument('--input_size', default=300, help="input images' size")
+    parser.add_argument('--num_classes', default=20, help='Number of classes')
     args = parser.parse_args()
 
     use_gpu = args.gpu
@@ -101,12 +102,26 @@ if __name__ == '__main__':
     testloader = DataLoader(testset, batch_size=args.batch_size,
                             shuffle=False, num_workers=8, collate_fn=testset.collate_fn)
 
+    # trainset = ListDataset(root=r'E:\st',
+    #                        list_file='./data/data2.txt',
+    #                        train=True, transform=transform, input_size=args.input_size)
+    # trainloader = DataLoader(trainset, batch_size=args.batch_size,
+    #                          shuffle=True, num_workers=8, collate_fn=trainset.collate_fn)
+    #
+    # testset = ListDataset(root=r'E:\st',
+    #                       list_file='./data/data2.txt',
+    #                       train=False, transform=transform, input_size=args.input_size)
+    # testloader = DataLoader(testset, batch_size=args.batch_size,
+    #                         shuffle=False, num_workers=8, collate_fn=testset.collate_fn)
+
     # Model
-    if args.model == 'res50':
-        net = RetinaNet_Shuffle()
+    if args.model == 'shufflenet':
+        # convert_shuffle_net()
+        net = RetinaNet_Shuffle(num_classes=args.num_classes)
         net.load_state_dict(torch.load('./model/retina_net_shuffle.pth'))
     else:
-        net = RetinaNet()
+        convert_res50()
+        net = RetinaNet(num_classes=args.num_classes)
         net.load_state_dict(torch.load('./model/retina_net_res50.pth'))
     if args.resume:
         print('==> Resuming from checkpoint..')
@@ -119,7 +134,7 @@ if __name__ == '__main__':
     if use_gpu:
         net.cuda()
 
-    criterion = FocalLoss(use_gpu=use_gpu)
+    criterion = FocalLoss(num_classes=args.num_classes, use_gpu=use_gpu)
     optimizer = optim.Adam(net.parameters(), lr=args.lr, weight_decay=1e-4)
 
     for epoch in range(start_epoch, start_epoch + args.epoch):
