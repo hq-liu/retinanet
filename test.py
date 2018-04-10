@@ -9,7 +9,7 @@ from PIL import Image, ImageDraw
 
 
 print('Loading model..')
-net = RetinaNet_Shuffle(5)
+net = RetinaNet_Shuffle(20)
 net.load_state_dict(torch.load('./checkpoint/ckpt.pth')['net'])
 net.eval()
 

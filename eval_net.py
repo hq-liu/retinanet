@@ -11,19 +11,26 @@ from model.retina_shuffle import RetinaNet_Shuffle
 from data_utils.encoder import DataEncoder
 
 from PIL import Image
+from PIL import ImageDraw
 
 
 class Eval_net():
-    def __init__(self, img_size):
+    def __init__(self, img_size, use_gpu=False):
+        self.FloatTensor = torch.cuda.FloatTensor if use_gpu else torch.FloatTensor
+        self.LongTensor = torch.cuda.LongTensor if use_gpu else torch.LongTensor
+
         print('Loading model..')
-        self.net = RetinaNet_Shuffle(num_classes=20)
+        self.net = RetinaNet_Shuffle(num_classes=5)
         self.net.load_state_dict(torch.load('./checkpoint/ckpt.pth')['net'])
-        # net.cuda()
+        self.net.type(self.FloatTensor)
         self.net.eval()
 
         print('Preparing dataset..')
         self.img_size = img_size
-
+        self.transform = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
+        ])
         dataset = ListDataset(root='D:\VOCdevkit\VOC2007\JPEGImages',
                               list_file='./data/voc07_test.txt',
                               transform=self.transform, input_size=img_size, train=False)
@@ -43,7 +50,7 @@ class Eval_net():
                 d = [int(x) for x in line[1:]]
                 self.gt_difficults.append(d)
 
-    def transform(self, img, boxes, labels):
+    def transform_with_boxes(self, img, boxes, labels):
         img, boxes = resize(img, boxes, size=(self.img_size, self.img_size))
         img = transforms.Compose([
             transforms.ToTensor(),
@@ -57,7 +64,8 @@ class Eval_net():
             self.gt_boxes.append(box_targets.squeeze(0))
             self.gt_labels.append(label_targets.squeeze(0))
 
-            loc_preds, cls_preds = self.net(Variable(inputs.cuda(), volatile=True))
+            inputs = Variable(inputs, volatile=True).type(self.FloatTensor)
+            loc_preds, cls_preds = self.net(inputs)
             box_preds, label_preds, score_preds = self.box_coder.decode(
                 loc_preds.cpu().data.squeeze(),
                 F.softmax(cls_preds.squeeze(), dim=1).cpu().data,
@@ -72,3 +80,28 @@ class Eval_net():
             self.gt_boxes, self.gt_labels, self.gt_difficults,
             iou_thresh=0.5, use_07_metric=True))
 
+    def draw_picture(self):
+        print('Loading image..')
+        img = Image.open(r'E:\md\IMG_20180317_172421R.jpg')
+        w = h = self.img_size
+        img = img.resize((w, h))
+        
+        print('Predicting..')
+        x = self.transform(img)
+        x = x.unsqueeze(0)
+        x = Variable(x, volatile=True)
+        loc_preds, cls_preds = self.net(x)
+
+        print('Decoding..')
+        encoder = DataEncoder()
+        boxes, labels = encoder.decode(loc_preds.data.squeeze(), cls_preds, (w, h))
+
+        draw = ImageDraw.Draw(img)
+        for box in boxes:
+            draw.rectangle(list(box), outline='red')
+        img.show()
+
+
+if __name__ == '__main__':
+    eval = Eval_net(300)
+    eval.eval()
