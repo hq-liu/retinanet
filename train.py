@@ -90,7 +90,7 @@ if __name__ == '__main__':
     testloader = DataLoader(testset, batch_size=16, shuffle=False, num_workers=8, collate_fn=testset.collate_fn)
 
     # Model
-    net = RetinaNet_Shuffle(5)
+    net = RetinaNet_Shuffle()
     net.load_state_dict(torch.load('./model/retina_net_shuffle.pth'))
     if args.resume:
         print('==> Resuming from checkpoint..')
@@ -103,7 +103,7 @@ if __name__ == '__main__':
     if use_gpu:
         net.cuda()
 
-    criterion = FocalLoss(5, use_gpu=use_gpu)
+    criterion = FocalLoss(use_gpu=use_gpu)
     optimizer = optim.Adam(net.parameters(), lr=args.lr, weight_decay=1e-4)
 
     for epoch in range(start_epoch, start_epoch + 200):

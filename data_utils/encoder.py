@@ -1,6 +1,7 @@
 '''Encode object boxes and labels.'''
 import math
 import torch
+from torch.nn import functional as F
 
 from utils import meshgrid, calculate_iou, nms, change_box_order
 
@@ -122,10 +123,11 @@ class DataEncoder:
         wh = loc_wh.exp() * anchor_boxes[:, 2:]
         boxes = torch.cat([xy-wh/2, xy+wh/2], 1)  # [#anchors,4]
 
-        score, labels = cls_preds.sigmoid().max(1)          # [#anchors,]
-        ids = score > CLS_THRESH
-        ids = ids.nonzero().squeeze()             # [#obj,]
-        keep = nms(boxes[ids], score[ids], threshold=NMS_THRESH)
+        output = F.softmax(cls_preds, dim=2)
+        score, labels = output.max(2)          # [#anchors,]
+        score, labels = score.squeeze(), labels.squeeze()
+        ids = labels.data.nonzero().squeeze()        # [#obj,]
+        keep = nms(boxes[ids], score[ids].data, threshold=NMS_THRESH)
         return boxes[ids][keep], labels[ids][keep]
 
 

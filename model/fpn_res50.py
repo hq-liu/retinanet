@@ -101,7 +101,6 @@ class FPN(nn.Module):
         c3 = self.layer2(c2)
         c4 = self.layer3(c3)
         c5 = self.layer4(c4)
-        print(c2.size(), c3.size(), c4.size(), c5.size())
         p6 = self.conv6(c5)
         p7 = self.conv7(F.relu(p6))
         # Top-down

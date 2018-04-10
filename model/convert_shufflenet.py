@@ -16,14 +16,14 @@ print('Loading pretrained shuffle_net model..')
 d = torch.load('./shufflenet.pth.tar', map_location=lambda storage, loc: storage)['state_dict']
 
 print('Loading into FPN50..')
-fpn = FPN_ShuffleNet(5)
+fpn = FPN_ShuffleNet()
 dd = fpn.state_dict()
 for k in d.keys():
     if not k.startswith('fc'):  # skip fc layers
         dd[k] = d[k]
 
 print('Saving RetinaNet..')
-net = RetinaNet_Shuffle(5)
+net = RetinaNet_Shuffle()
 for m in net.modules():
     if isinstance(m, nn.Conv2d):
         init.normal(m.weight, mean=0, std=0.01)

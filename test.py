@@ -10,16 +10,16 @@ from PIL import Image, ImageDraw
 
 print('Loading model..')
 net = RetinaNet_Shuffle(5)
-net.load_state_dict(torch.load('./checkpoint/params.pth'))
+net.load_state_dict(torch.load('./checkpoint/ckpt.pth')['net'])
 net.eval()
 
 transform = transforms.Compose([
     transforms.ToTensor(),
-    transforms.Normalize((0.485,0.456,0.406), (0.229,0.224,0.225))
+    transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
 ])
 
 print('Loading image..')
-img = Image.open('./image/000001.jpg')
+img = Image.open(r'E:\md\IMG_20180317_172421R.jpg')
 w = h = 300
 img = img.resize((w, h))
 
@@ -31,7 +31,7 @@ loc_preds, cls_preds = net(x)
 
 print('Decoding..')
 encoder = DataEncoder()
-boxes, labels = encoder.decode(loc_preds.data.squeeze(), cls_preds.data.squeeze(), (w, h))
+boxes, labels = encoder.decode(loc_preds.data.squeeze(), cls_preds, (w, h))
 
 draw = ImageDraw.Draw(img)
 for box in boxes:
