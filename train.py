@@ -6,6 +6,7 @@ import torch.optim as optim
 import torchvision.transforms as transforms
 from model.loss import FocalLoss
 from model.retina_shuffle import RetinaNet_Shuffle
+from model.retina_net import RetinaNet
 from data_utils.data_input import ListDataset
 from torch.autograd import Variable
 
@@ -90,8 +91,10 @@ if __name__ == '__main__':
     testloader = DataLoader(testset, batch_size=16, shuffle=False, num_workers=8, collate_fn=testset.collate_fn)
 
     # Model
-    net = RetinaNet_Shuffle()
-    net.load_state_dict(torch.load('./model/retina_net_shuffle.pth'))
+    # net = RetinaNet_Shuffle()
+    # net.load_state_dict(torch.load('./model/retina_net_shuffle.pth'))
+    net = RetinaNet()
+    net.load_state_dict(torch.load('./model/retina_net_res50.pth'))
     if args.resume:
         print('==> Resuming from checkpoint..')
         checkpoint = torch.load('./checkpoint/ckpt.pth')
