@@ -13,7 +13,7 @@ class FocalLoss(nn.Module):
         self.num_classes = num_classes
         self.FloatTensor = torch.cuda.FloatTensor if use_gpu else torch.FloatTensor
 
-    def focal_loss(self, x, y, gamma=2, alpha=1):
+    def focal_loss(self, x, y, gamma=2, alpha=0.25):
         """
         Focal loss.
         FL(p_t) = -alpha * (1 - p_t)**gamma * log(p_t)\
