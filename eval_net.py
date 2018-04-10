@@ -85,7 +85,7 @@ class Eval_net():
         img = Image.open(r'E:\md\IMG_20180317_172421R.jpg')
         w = h = self.img_size
         img = img.resize((w, h))
-        
+
         print('Predicting..')
         x = self.transform(img)
         x = x.unsqueeze(0)
