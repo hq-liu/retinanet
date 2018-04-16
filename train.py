@@ -16,7 +16,7 @@ from model.convert_model import convert_res50, convert_shuffle_net
 def train(epoch):
     print('\nEpoch: %d' % epoch)
     net.train()
-    net.freeze_bn()
+    # net.freeze_bn()
     train_loss = 0
     for batch_idx, (inputs, loc_targets, cls_targets) in enumerate(trainloader):
         inputs = Variable(inputs).cuda() if use_gpu else Variable(inputs)
@@ -71,11 +71,11 @@ if __name__ == '__main__':
                         action='store_true', help='resume from checkpoint')
     parser.add_argument('--gpu', default=False, help='Use Gpu or not')
     parser.add_argument('--device', default=0, help='Which gpu is using')
-    parser.add_argument('--model', default='shufflenet', help='shufflenet or res50')
+    parser.add_argument('--model', default='res50', help='shufflenet or res50')
     parser.add_argument('--epoch', default=200, help='max training epochs')
     parser.add_argument('--batch_size', default=4, help='batch size')
     parser.add_argument('--input_size', default=300, help="input images' size")
-    parser.add_argument('--num_classes', default=5, help='Number of classes')
+    parser.add_argument('--num_classes', default=20, help='Number of classes')
     args = parser.parse_args()
 
     use_gpu = args.gpu
@@ -91,29 +91,29 @@ if __name__ == '__main__':
         transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
     ])
 
-    # trainset = ListDataset(root=r'D:\VOCdevkit\VOC2007\JPEGImages',
-    #                        list_file='./data/voc07_train.txt',
-    #                        train=True, transform=transform, input_size=args.input_size)
-    # trainloader = DataLoader(trainset, batch_size=args.batch_size,
-    #                          shuffle=True, num_workers=8, collate_fn=trainset.collate_fn)
-    #
-    # testset = ListDataset(root=r'D:\VOCdevkit\VOC2007\JPEGImages',
-    #                       list_file='./data/voc07_train.txt',
-    #                       train=False, transform=transform, input_size=args.input_size)
-    # testloader = DataLoader(testset, batch_size=args.batch_size,
-    #                         shuffle=False, num_workers=8, collate_fn=testset.collate_fn)
-
-    trainset = ListDataset(root=r'E:\st',
-                           list_file='./data/data2.txt',
+    trainset = ListDataset(root=r'D:\VOCdevkit\VOC2007\JPEGImages',
+                           list_file='./data/voc07_train.txt',
                            train=True, transform=transform, input_size=args.input_size)
     trainloader = DataLoader(trainset, batch_size=args.batch_size,
                              shuffle=True, num_workers=8, collate_fn=trainset.collate_fn)
 
-    testset = ListDataset(root=r'E:\st',
-                          list_file='./data/data2.txt',
+    testset = ListDataset(root=r'D:\VOCdevkit\VOC2007\JPEGImages',
+                          list_file='./data/voc07_train.txt',
                           train=False, transform=transform, input_size=args.input_size)
     testloader = DataLoader(testset, batch_size=args.batch_size,
                             shuffle=False, num_workers=8, collate_fn=testset.collate_fn)
+
+    # trainset = ListDataset(root=r'E:\st',
+    #                        list_file='./data/data2.txt',
+    #                        train=True, transform=transform, input_size=args.input_size)
+    # trainloader = DataLoader(trainset, batch_size=args.batch_size,
+    #                          shuffle=True, num_workers=8, collate_fn=trainset.collate_fn)
+    #
+    # testset = ListDataset(root=r'E:\st',
+    #                       list_file='./data/data2.txt',
+    #                       train=False, transform=transform, input_size=args.input_size)
+    # testloader = DataLoader(testset, batch_size=args.batch_size,
+    #                         shuffle=False, num_workers=8, collate_fn=testset.collate_fn)
 
     # Model
     if args.model == 'shufflenet':
@@ -121,7 +121,7 @@ if __name__ == '__main__':
         net = RetinaNet_Shuffle(num_classes=args.num_classes)
         net.load_state_dict(torch.load('retina_net_shuffle.pth'))
     else:
-        convert_res50()
+        convert_res50(num_classes=args.num_classes)
         net = RetinaNet(num_classes=args.num_classes)
         net.load_state_dict(torch.load('retina_net_res50.pth'))
     if args.resume:

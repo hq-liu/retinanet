@@ -13,7 +13,7 @@ class FocalLoss(nn.Module):
         self.num_classes = num_classes
         self.FloatTensor = torch.cuda.FloatTensor if use_gpu else torch.FloatTensor
 
-    def focal_loss(self, x, y, gamma=2, alpha=0.25):
+    def focal_loss(self, x, y, gamma=2, alpha=None):
         """
         Focal loss.
         FL(p_t) = -alpha * (1 - p_t)**gamma * log(p_t)\
@@ -27,6 +27,10 @@ class FocalLoss(nn.Module):
         Return:
           (tensor) focal loss.
         """
+        if alpha is None:
+            alpha = 0.25 * Variable(torch.ones(self.num_classes+1, 1)).type(self.FloatTensor)
+        ids = y.view(-1, 1)
+        alpha = alpha[ids.data.view(-1)]
         t = one_hot_embedding(y.data.cpu(), self.num_classes+1)
         t = Variable(t).type(self.FloatTensor)  # [N,D]
         p = F.softmax(x, dim=1)  # [N,D]
@@ -63,7 +67,7 @@ class FocalLoss(nn.Module):
         loc_loss = F.smooth_l1_loss(masked_loc_preds, masked_loc_targets, size_average=False)
 
         ################################################################
-        # cls_loss = FocalLoss(loc_preds, loc_targets)
+        # cls_loss = FocalLoss(cls_preds, cls_targets)
         ################################################################
         pos_neg = cls_targets > -1  # exclude ignored anchors
         mask = pos_neg.unsqueeze(2).expand_as(cls_preds)
@@ -74,7 +78,7 @@ class FocalLoss(nn.Module):
         if loc_loss.data[0] == 0:
             loss = cls_loss
         else:
-            loss = loc_loss/num_pos+cls_loss
+            loss = 5*loc_loss/num_pos+cls_loss
         return loss
 
 

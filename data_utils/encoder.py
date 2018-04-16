@@ -80,6 +80,7 @@ class DataEncoder:
         input_size = torch.FloatTensor([input_size, input_size]) if isinstance(input_size, int) \
             else torch.FloatTensor(input_size)
         anchor_boxes = self._get_anchor_boxes(input_size)
+        anchor_boxes = change_box_order(anchor_boxes, 'xyxy2xywh')
         boxes = change_box_order(boxes, 'xyxy2xywh')
 
         ious = calculate_iou(anchor_boxes, boxes, order='xywh')
@@ -92,8 +93,8 @@ class DataEncoder:
         cls_targets = 1 + labels[max_ids]
 
         cls_targets[max_ious < 0.5] = 0
-        ignore = (max_ious > 0.4) & (max_ious < 0.5)  # ignore ious between [0.4,0.5]
-        cls_targets[ignore] = -1  # for now just mark ignored to -1
+        # ignore = (max_ious > 0.4) & (max_ious < 0.5)  # ignore ious between [0.4,0.5]
+        # cls_targets[ignore] = -1  # for now just mark ignored to -1
         return loc_targets, cls_targets
 
     def decode(self, loc_preds, cls_preds, input_size, score_thresh=0.6, nms_thresh=0.45):
