@@ -69,9 +69,9 @@ if __name__ == '__main__':
     parser.add_argument('--lr', default=1e-3, type=float, help='learning rate')
     parser.add_argument('--resume', '-r', default=False,
                         action='store_true', help='resume from checkpoint')
-    parser.add_argument('--gpu', default=False, help='Use Gpu or not')
+    parser.add_argument('--gpu', default=True, help='Use Gpu or not')
     parser.add_argument('--device', default=0, help='Which gpu is using')
-    parser.add_argument('--model', default='res50', help='shufflenet or res50')
+    parser.add_argument('--model', default='shufflenet', help='shufflenet or res50')
     parser.add_argument('--epoch', default=200, help='max training epochs')
     parser.add_argument('--batch_size', default=4, help='batch size')
     parser.add_argument('--input_size', default=300, help="input images' size")
@@ -140,4 +140,5 @@ if __name__ == '__main__':
 
     for epoch in range(start_epoch, start_epoch + args.epoch):
         train(epoch)
-        test(epoch)
+        # test(epoch)
+        torch.save(net.state_dict(), './checkpoint/ckpt.pth')
