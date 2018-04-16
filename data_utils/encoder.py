@@ -80,7 +80,7 @@ class DataEncoder:
         input_size = torch.FloatTensor([input_size, input_size]) if isinstance(input_size, int) \
             else torch.FloatTensor(input_size)
         anchor_boxes = self._get_anchor_boxes(input_size)
-        anchor_boxes = change_box_order(anchor_boxes, 'xyxy2xywh')
+        # anchor_boxes = change_box_order(anchor_boxes, 'xyxy2xywh')
         boxes = change_box_order(boxes, 'xyxy2xywh')
 
         ious = calculate_iou(anchor_boxes, boxes, order='xywh')

@@ -69,7 +69,7 @@ if __name__ == '__main__':
     parser.add_argument('--lr', default=1e-3, type=float, help='learning rate')
     parser.add_argument('--resume', '-r', default=False,
                         action='store_true', help='resume from checkpoint')
-    parser.add_argument('--gpu', default=True, help='Use Gpu or not')
+    parser.add_argument('--gpu', default=False, help='Use Gpu or not')
     parser.add_argument('--device', default=0, help='Which gpu is using')
     parser.add_argument('--model', default='shufflenet', help='shufflenet or res50')
     parser.add_argument('--epoch', default=200, help='max training epochs')
@@ -136,7 +136,8 @@ if __name__ == '__main__':
         net.cuda()
 
     criterion = FocalLoss(num_classes=args.num_classes, use_gpu=use_gpu)
-    optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=1e-4)
+    # optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=1e-4)
+    optimizer = optim.RMSprop(net.parameters(), lr=args.lr, weight_decay=1e-4)
 
     for epoch in range(start_epoch, start_epoch + args.epoch):
         train(epoch)

@@ -11,7 +11,7 @@ from PIL import Image, ImageDraw
 
 print('Loading model..')
 net = RetinaNet_Shuffle()
-net.load_state_dict(torch.load('./checkpoint/ckpt.pth')['net'])
+net.load_state_dict(torch.load('./checkpoint/ckpt.pth', map_location=lambda storage, loc: storage))
 net.eval()
 
 transform = transforms.Compose([
@@ -20,7 +20,7 @@ transform = transforms.Compose([
 ])
 
 print('Loading image..')
-img = Image.open(r'D:\VOCdevkit\VOC2007\JPEGImages\000005.jpg')
+img = Image.open(r'D:\VOCdevkit\VOC2007\JPEGImages\000001.jpg')
 w = h = 300
 img = img.resize((w, h))
 
