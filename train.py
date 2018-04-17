@@ -67,13 +67,14 @@ def test(epoch):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch RetinaNet Training')
     parser.add_argument('--lr', default=1e-3, type=float, help='learning rate')
+    parser.add_argument('--lr_decay', default=0.99, type=float, help='learning rate decay')
     parser.add_argument('--resume', '-r', default=False,
                         action='store_true', help='resume from checkpoint')
     parser.add_argument('--gpu', default=False, help='Use Gpu or not')
-    parser.add_argument('--device', default=0, help='Which gpu is using')
+    parser.add_argument('--device', default=0, type=int, help='Which gpu is using')
     parser.add_argument('--model', default='shufflenet', help='shufflenet or res50')
-    parser.add_argument('--epoch', default=200, help='max training epochs')
-    parser.add_argument('--batch_size', default=4, help='batch size')
+    parser.add_argument('--epoch', default=200, type=int, help='max training epochs')
+    parser.add_argument('--batch_size', default=4, type=int, help='batch size')
     parser.add_argument('--input_size', default=300, help="input images' size")
     parser.add_argument('--num_classes', default=20, help='Number of classes')
     args = parser.parse_args()
@@ -136,10 +137,15 @@ if __name__ == '__main__':
         net.cuda()
 
     criterion = FocalLoss(num_classes=args.num_classes, use_gpu=use_gpu)
-    # optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=1e-4)
-    optimizer = optim.RMSprop(net.parameters(), lr=args.lr, weight_decay=1e-4)
+    optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=1e-4)
+    # optimizer = optim.RMSprop(net.parameters(), lr=args.lr, weight_decay=1e-4)
 
+    lr = args.lr
+    decay_rate = 0.99
     for epoch in range(start_epoch, start_epoch + args.epoch):
-        train(epoch)
+        # train(epoch)
+        lr *= 0.99
+        for param_group in optimizer.param_groups:
+            param_group['lr'] = param_group['lr'] * decay_rate
         # test(epoch)
         torch.save(net.state_dict(), './checkpoint/ckpt.pth')

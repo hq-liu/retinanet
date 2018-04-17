@@ -20,7 +20,7 @@ transform = transforms.Compose([
 ])
 
 print('Loading image..')
-img = Image.open(r'D:\VOCdevkit\VOC2007\JPEGImages\000001.jpg')
+img = Image.open(r'D:\VOCdevkit\VOC2007\JPEGImages\000005.jpg')
 w = h = 300
 img = img.resize((w, h))
 
@@ -33,10 +33,10 @@ cls_preds = cls_preds.data.squeeze()
 cls_preds = Variable(cls_preds)
 a = F.softmax(cls_preds, dim=1)
 a = a.data.squeeze()
-print(a.size())
 b = torch.max(a, dim=1)[1]
 print(b.max())
 c = torch.sort(b)
+print(c)
 
 
 print('Decoding..')

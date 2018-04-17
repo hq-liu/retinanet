@@ -97,7 +97,7 @@ class DataEncoder:
         # cls_targets[ignore] = -1  # for now just mark ignored to -1
         return loc_targets, cls_targets
 
-    def decode(self, loc_preds, cls_preds, input_size, score_thresh=0.6, nms_thresh=0.45):
+    def decode(self, loc_preds, cls_preds, input_size, score_thresh=0.6, nms_thresh=0.1):
         """
         Decode outputs back to bounding box locations and class labels.
 
