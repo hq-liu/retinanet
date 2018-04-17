@@ -33,17 +33,18 @@ cls_preds = cls_preds.data.squeeze()
 cls_preds = Variable(cls_preds)
 a = F.softmax(cls_preds, dim=1)
 a = a.data.squeeze()
+print(a)
 b = torch.max(a, dim=1)[1]
 print(b.max())
 c = torch.sort(b)
 print(c)
 
 
-print('Decoding..')
-encoder = DataEncoder()
-boxes, labels, scores = encoder.decode(loc_preds.data.squeeze(), cls_preds.data.squeeze(), (w, h))
-
-draw = ImageDraw.Draw(img)
-for box in boxes:
-    draw.rectangle(list(box), outline='red')
-img.show()
+# print('Decoding..')
+# encoder = DataEncoder()
+# boxes, labels, scores = encoder.decode(loc_preds.data.squeeze(), cls_preds.data.squeeze(), (w, h))
+#
+# draw = ImageDraw.Draw(img)
+# for box in boxes:
+#     draw.rectangle(list(box), outline='red')
+# img.show()

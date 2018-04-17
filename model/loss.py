@@ -31,7 +31,7 @@ class FocalLoss(nn.Module):
         N = x.size(0)
         C = x.size(1)
         if alpha is None:
-            alpha = 0.25 * Variable(torch.ones(self.num_classes, 1)).type(self.FloatTensor)
+            alpha = 0.25 * Variable(torch.ones(self.num_classes+1, 1)).type(self.FloatTensor)
         ids = y.view(-1, 1)
         alpha = alpha[ids.data.view(-1)]
 
@@ -47,6 +47,32 @@ class FocalLoss(nn.Module):
         loss = loss.squeeze(1)
         loss = torch.mean(loss)
         return loss
+
+    def focal_loss_sigmoid(self, x, y):
+        '''Sigmoid version of focal loss.
+
+        This is described in the original paper.
+        With BCELoss, the background should not be counted in num_classes.
+
+        Args:
+          x: (tensor) predictions, sized [N,D].
+          y: (tensor) targets, sized [N,].
+
+        Return:
+          (tensor) focal loss.
+        '''
+        alpha = 0.25
+        gamma = 2
+
+        t = one_hot_embedding(y.data.cpu(), 1+self.num_classes)
+        t = t[:,1:]  # exclude background
+        t = Variable(t).cuda()
+
+        p = x.sigmoid()
+        pt = p*t + (1-p)*(1-t)         # pt = p if t > 0 else 1-p
+        w = alpha*t + (1-alpha)*(1-t)  # w = alpha if t > 0 else 1-alpha
+        w = w * (1-pt).pow(gamma)
+        return F.binary_cross_entropy_with_logits(x, t, w, size_average=False)
 
     def forward(self, loc_preds, loc_targets, cls_preds, cls_targets):
         """

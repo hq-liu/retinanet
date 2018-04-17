@@ -68,15 +68,15 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch RetinaNet Training')
     parser.add_argument('--lr', default=1e-3, type=float, help='learning rate')
     parser.add_argument('--lr_decay', default=0.99, type=float, help='learning rate decay')
-    parser.add_argument('--resume', '-r', default=False,
+    parser.add_argument('--resume', '-r', default=True,
                         action='store_true', help='resume from checkpoint')
-    parser.add_argument('--gpu', default=False, help='Use Gpu or not')
+    parser.add_argument('--gpu', default=False, type=bool, help='Use Gpu or not')
     parser.add_argument('--device', default=0, type=int, help='Which gpu is using')
     parser.add_argument('--model', default='shufflenet', help='shufflenet or res50')
     parser.add_argument('--epoch', default=200, type=int, help='max training epochs')
     parser.add_argument('--batch_size', default=4, type=int, help='batch size')
-    parser.add_argument('--input_size', default=300, help="input images' size")
-    parser.add_argument('--num_classes', default=20, help='Number of classes')
+    parser.add_argument('--input_size', default=300, type=int, help="input images' size")
+    parser.add_argument('--num_classes', default=20, type=int, help='Number of classes')
     args = parser.parse_args()
 
     use_gpu = args.gpu
@@ -127,10 +127,10 @@ if __name__ == '__main__':
         net.load_state_dict(torch.load('retina_net_res50.pth'))
     if args.resume:
         print('==> Resuming from checkpoint..')
-        checkpoint = torch.load('./checkpoint/ckpt.pth')
-        net.load_state_dict(checkpoint['net'])
-        best_loss = checkpoint['loss']
-        start_epoch = checkpoint['epoch']
+        checkpoint = torch.load('./checkpoint/ckpt.pth', map_location=lambda storage, loc: storage)
+        net.load_state_dict(checkpoint)
+        # best_loss = checkpoint['loss']
+        # start_epoch = checkpoint['epoch']
 
     # net = torch.nn.DataParallel(net, device_ids=range(torch.cuda.device_count()))
     if use_gpu:
