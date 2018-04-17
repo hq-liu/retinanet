@@ -30,7 +30,7 @@ def train(epoch):
         optimizer.step()
 
         train_loss += loss.data[0]
-        print('train_loss: %.3f | avg_loss: %.3f' % (loss.data[0], train_loss/(batch_idx+1)))
+        print('train_loss: %.5f | avg_loss: %.5f' % (loss.data[0], train_loss/(batch_idx+1)))
         # torch.cuda.empty_cache()
 
 

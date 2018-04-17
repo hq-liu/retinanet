@@ -81,7 +81,7 @@ class FocalLoss(nn.Module):
         masked_cls_preds = cls_preds[mask].view(-1, self.num_classes+1)
         cls_loss = self.focal_loss(masked_cls_preds, cls_targets[pos_neg])
 
-        print('loc_loss: %.3f | cls_loss: %.3f' % (loc_loss.data[0]/num_pos, cls_loss.data[0]), end=' | ')
+        print('loc_loss: %.5f | cls_loss: %.5f' % (loc_loss.data[0]/num_pos, cls_loss.data[0]), end=' | ')
         if loc_loss.data[0] == 0:
             loss = cls_loss
         else:
