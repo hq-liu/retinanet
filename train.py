@@ -141,11 +141,11 @@ if __name__ == '__main__':
     # optimizer = optim.RMSprop(net.parameters(), lr=args.lr, weight_decay=1e-4)
 
     lr = args.lr
-    decay_rate = 0.99
+    decay_rate = args.lr_decay
     for epoch in range(start_epoch, start_epoch + args.epoch):
-        # train(epoch)
-        lr *= 0.99
+        train(epoch)
         for param_group in optimizer.param_groups:
             param_group['lr'] = param_group['lr'] * decay_rate
         # test(epoch)
         torch.save(net.state_dict(), './checkpoint/ckpt.pth')
+    test(1)
