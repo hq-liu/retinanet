@@ -8,6 +8,7 @@ from data_utils.transform import resize
 from data_utils.data_input import ListDataset
 from data_utils.eval import voc_eval
 from model.retina_shuffle import RetinaNet_Shuffle
+from model.retina_net import RetinaNet
 from data_utils.encoder import DataEncoder
 
 from PIL import Image
@@ -20,8 +21,8 @@ class Eval_net():
         self.LongTensor = torch.cuda.LongTensor if use_gpu else torch.LongTensor
 
         print('Loading model..')
-        self.net = RetinaNet_Shuffle(num_classes=5)
-        self.net.load_state_dict(torch.load('./checkpoint/ckpt.pth')['net'])
+        self.net = RetinaNet(num_classes=5)
+        self.net.load_state_dict(torch.load('./checkpoint/ckpt_res.pth', map_location=lambda storage, loc: storage))
         self.net.type(self.FloatTensor)
         self.net.eval()
 
@@ -31,8 +32,8 @@ class Eval_net():
             transforms.ToTensor(),
             transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
         ])
-        dataset = ListDataset(root='D:\VOCdevkit\VOC2007\JPEGImages',
-                              list_file='./data/voc07_test.txt',
+        dataset = ListDataset(root=r'D:\麦当劳',
+                              list_file='./data/data.txt',
                               transform=self.transform, input_size=img_size, train=False)
         self.dataloader = DataLoader(dataset, batch_size=1, shuffle=False, num_workers=2)
         self.box_coder = DataEncoder()
@@ -43,12 +44,13 @@ class Eval_net():
         self.gt_boxes = []
         self.gt_labels = []
 
-        with open('./data/voc07_test_difficult.txt') as f:
-            self.gt_difficults = []
-            for line in f.readlines():
-                line = line.strip().split()
-                d = [int(x) for x in line[1:]]
-                self.gt_difficults.append(d)
+        self.gt_difficults=None
+        # with open('./data/voc07_test_difficult.txt') as f:
+        #     self.gt_difficults = []
+        #     for line in f.readlines():
+        #         line = line.strip().split()
+        #         d = [int(x) for x in line[1:]]
+        #         self.gt_difficults.append(d)
 
     def transform_with_boxes(self, img, boxes, labels):
         img, boxes = resize(img, boxes, size=(self.img_size, self.img_size))
@@ -64,13 +66,11 @@ class Eval_net():
             self.gt_boxes.append(box_targets.squeeze(0))
             self.gt_labels.append(label_targets.squeeze(0))
 
-            inputs = Variable(inputs, volatile=True).type(self.FloatTensor)
+            inputs = Variable(inputs).type(self.FloatTensor)
             loc_preds, cls_preds = self.net(inputs)
-            box_preds, label_preds, score_preds = self.box_coder.decode(
-                loc_preds.cpu().data.squeeze(),
-                F.softmax(cls_preds.squeeze(), dim=1).cpu().data,
-                score_thresh=0.01, input_size=self.img_size)
-
+            box_preds, label_preds, score_preds = self.box_coder.decode(loc_preds.data.squeeze(),
+                                                                        cls_preds.data.squeeze(),
+                                                                        input_size=self.img_size)
             self.pred_boxes.append(box_preds)
             self.pred_labels.append(label_preds)
             self.pred_scores.append(score_preds)
@@ -82,7 +82,7 @@ class Eval_net():
 
     def draw_picture(self):
         print('Loading image..')
-        img = Image.open(r'E:\md\IMG_20180317_172421R.jpg')
+        img = Image.open(r'D:\麦当劳\1(29).jpg')
         w = h = self.img_size
         img = img.resize((w, h))
 
@@ -94,7 +94,7 @@ class Eval_net():
 
         print('Decoding..')
         encoder = DataEncoder()
-        boxes, labels = encoder.decode(loc_preds.data.squeeze(), cls_preds, (w, h))
+        boxes, labels, score = encoder.decode(loc_preds.data.squeeze(), cls_preds.data.squeeze(), (w, h))
 
         draw = ImageDraw.Draw(img)
         for box in boxes:

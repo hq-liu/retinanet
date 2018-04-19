@@ -6,9 +6,12 @@ from torch.nn import functional as F
 from utils import meshgrid, calculate_iou, nms, change_box_order
 
 
-class DataEncoder:
+torch.set_printoptions(profile='full')
+
+
+class DataEncoder(object):
     def __init__(self):
-        self.anchor_areas = [32*32., 64*64., 128*128., 256*256., 512*512.]  # p3 -> p7
+        self.anchor_areas = [16*32., 32*64., 64*128., 128*256., 256*512.]  # p3 -> p7
         self.aspect_ratios = [1/2., 1/1., 2/1.]
         self.scale_ratios = [1., pow(2, 1/3.), pow(2, 2/3.)]
         self.anchor_wh = self._get_anchor_wh()
@@ -97,50 +100,89 @@ class DataEncoder:
         # cls_targets[ignore] = -1  # for now just mark ignored to -1
         return loc_targets, cls_targets
 
-    def decode(self, loc_preds, cls_preds, input_size, score_thresh=0.6, nms_thresh=0.1):
+    # def decode(self, loc_preds, cls_preds, input_size, score_thresh=0.6, nms_thresh=0.1):
+    #     """
+    #     Decode outputs back to bounding box locations and class labels.
+    #
+    #     Args:
+    #       loc_preds: (tensor) predicted locations, sized [#anchors, 4].
+    #       cls_preds: (tensor) predicted class labels, sized [#anchors, #classes].
+    #       input_size: (int/tuple) model input size of (w,h).
+    #
+    #     Returns:
+    #       boxes: (tensor) decode box locations, sized [#obj,4].
+    #       labels: (tensor) class labels for each box, sized [#obj,].
+    #     """
+    #     variances = (0.1, 0.2)
+    #     input_size = torch.FloatTensor([input_size, input_size]) if isinstance(input_size, int) \
+    #         else torch.FloatTensor(input_size)
+    #     default_boxes = self._get_anchor_boxes(input_size)
+    #     xy = loc_preds[:, :2] * variances[0] * default_boxes[:, 2:] + default_boxes[:, :2]
+    #     wh = torch.exp(loc_preds[:, 2:] * variances[1]) * default_boxes[:, 2:]
+    #     box_preds = torch.cat([xy - wh / 2, xy + wh / 2], 1)
+    #
+    #     boxes = []
+    #     labels = []
+    #     scores = []
+    #     num_classes = cls_preds.size(1)
+    #     for i in range(num_classes - 1):
+    #         score = cls_preds[:, i + 1]  # class i corresponds to (i+1) column
+    #         mask = score > score_thresh
+    #         if not mask.any():
+    #             continue
+    #         box = box_preds[mask.nonzero().squeeze()]
+    #         score = score[mask]
+    #
+    #         keep = nms(box, score, nms_thresh)
+    #         boxes.append(box[keep])
+    #         labels.append(torch.LongTensor(len(box[keep])).fill_(i))
+    #         scores.append(score[keep])
+    #
+    #     boxes = torch.cat(boxes, 0)
+    #     labels = torch.cat(labels, 0)
+    #     scores = torch.cat(scores, 0)
+    #     return boxes, labels, scores
+
+    def decode(self, loc_preds, cls_preds, input_size):
         """
-        Decode outputs back to bounding box locations and class labels.
+        Decode outputs back to bouding box locations and class labels.
 
         Args:
           loc_preds: (tensor) predicted locations, sized [#anchors, 4].
           cls_preds: (tensor) predicted class labels, sized [#anchors, #classes].
-          input_size: (int/tuple) model input size of (w,h).
+          input_size: (tuple) model input size of (w,h).
 
         Returns:
           boxes: (tensor) decode box locations, sized [#obj,4].
           labels: (tensor) class labels for each box, sized [#obj,].
         """
-        variances = (0.1, 0.2)
-        input_size = torch.FloatTensor([input_size, input_size]) if isinstance(input_size, int) \
+        CLS_THRESH = 0.2
+        NMS_THRESH = 0.2
+
+        input_size = torch.FloatTensor([input_size, input_size]) if isinstance(input_size, int)\
             else torch.FloatTensor(input_size)
-        default_boxes = self._get_anchor_boxes(input_size)
-        xy = loc_preds[:, :2] * variances[0] * default_boxes[:, 2:] + default_boxes[:, :2]
-        wh = torch.exp(loc_preds[:, 2:] * variances[1]) * default_boxes[:, 2:]
-        box_preds = torch.cat([xy - wh / 2, xy + wh / 2], 1)
+        anchor_boxes = self._get_anchor_boxes(input_size)  # xywh
 
-        boxes = []
-        labels = []
-        scores = []
-        num_classes = cls_preds.size(1)
-        for i in range(num_classes - 1):
-            score = cls_preds[:, i + 1]  # class i corresponds to (i+1) column
-            mask = score > score_thresh
-            if not mask.any():
-                continue
-            box = box_preds[mask.nonzero().squeeze()]
-            score = score[mask]
+        loc_xy = loc_preds[:, :2]
+        loc_wh = loc_preds[:, 2:]
 
-            keep = nms(box, score, nms_thresh)
-            boxes.append(box[keep])
-            labels.append(torch.LongTensor(len(box[keep])).fill_(i))
-            scores.append(score[keep])
+        xy = loc_xy * anchor_boxes[:, 2:] + anchor_boxes[:, :2]
+        wh = loc_wh.exp() * anchor_boxes[:, 2:]
+        boxes = torch.cat([xy-wh/2, xy+wh/2], 1)  # [#anchors,4]
 
-        boxes = torch.cat(boxes, 0)
-        labels = torch.cat(labels, 0)
-        scores = torch.cat(scores, 0)
-        return boxes, labels, scores
+        score, labels = cls_preds.sigmoid().max(1)          # [#anchors,]
+        ids = score > CLS_THRESH
+        ids = ids.nonzero().squeeze()             # [#obj,]
+        if len(ids) == 0:
+            return torch.FloatTensor([0, 0, 0, 0]).unsqueeze(0), torch.LongTensor([0,]), torch.LongTensor([0,])
+        keep = nms(boxes[ids], score[ids], threshold=NMS_THRESH)
+        return boxes[ids][keep], labels[ids][keep], score[ids][keep]
 
 
 if __name__ == '__main__':
-    data = DataEncoder()
-    print(data.anchor_wh)
+    pass
+    # coder = DataEncoder()
+    # input_size = (300, 300)
+    # input_size = torch.FloatTensor(input_size)
+    # boxes = coder.get_anchor_boxes(input_size=input_size)
+    # print(boxes)

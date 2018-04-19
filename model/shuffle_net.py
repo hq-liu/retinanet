@@ -159,13 +159,11 @@ class ShuffleUnit(nn.Module):
 
 
 class ShuffleNet(nn.Module):
-    """
-    ShuffleNet implementation.
+    """ShuffleNet implementation.
     """
 
     def __init__(self, groups=3, in_channels=3, num_classes=1000):
-        """
-        ShuffleNet constructor.
+        """ShuffleNet constructor.
 
         Arguments:
             groups (int, optional): number of groups to be used in grouped
@@ -199,7 +197,7 @@ class ShuffleNet(nn.Module):
         else:
             raise ValueError(
                 """{} groups is not supported for
-                   1x1 Grouped Convolutions""".format(groups))
+                   1x1 Grouped Convolutions""".format(num_groups))
 
         # Stage 1 always has 24 output channels
         self.conv1 = conv3x3(self.in_channels,
@@ -289,6 +287,7 @@ class ShuffleNet(nn.Module):
 
 
 if __name__ == "__main__":
-    """Testing
+    """
+    Testing
     """
     model = ShuffleNet()

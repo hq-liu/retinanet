@@ -49,7 +49,8 @@ class FocalLoss(nn.Module):
         return loss
 
     def focal_loss_sigmoid(self, x, y):
-        '''Sigmoid version of focal loss.
+        """
+        Sigmoid version of focal loss.
 
         This is described in the original paper.
         With BCELoss, the background should not be counted in num_classes.
@@ -60,12 +61,12 @@ class FocalLoss(nn.Module):
 
         Return:
           (tensor) focal loss.
-        '''
+        """
         alpha = 0.25
         gamma = 2
 
         t = one_hot_embedding(y.data.cpu(), 1+self.num_classes)
-        t = t[:,1:]  # exclude background
+        t = t[:, 1:]  # exclude background
         t = Variable(t).cuda()
 
         p = x.sigmoid()
@@ -104,8 +105,8 @@ class FocalLoss(nn.Module):
         ################################################################
         pos_neg = cls_targets > -1  # exclude ignored anchors
         mask = pos_neg.unsqueeze(2).expand_as(cls_preds)
-        masked_cls_preds = cls_preds[mask].view(-1, self.num_classes+1)
-        cls_loss = self.focal_loss(masked_cls_preds, cls_targets[pos_neg])
+        masked_cls_preds = cls_preds[mask].view(-1, self.num_classes)
+        cls_loss = self.focal_loss_sigmoid(masked_cls_preds, cls_targets[pos_neg])
 
         print('loc_loss: %.5f | cls_loss: %.5f' % (loc_loss.data[0]/num_pos, cls_loss.data[0]), end=' | ')
         if loc_loss.data[0] == 0:

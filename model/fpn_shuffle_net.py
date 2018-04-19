@@ -4,8 +4,8 @@ Build FPN with Shuffle_Net
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from model import shuffle_net
 from torch.autograd import Variable
+from model import shuffle_net
 from collections import OrderedDict
 import time
 
@@ -137,13 +137,10 @@ class FPN_ShuffleNet(nn.Module):
 
 def test():
     net = FPN_ShuffleNet()
-    fms = net(Variable(torch.randn(1, 3, 224, 224)))
+    fms = net(Variable(torch.randn(1, 3, 300, 300)))
     for fm in fms:
         print(fm.size())
 
 
 if __name__ == '__main__':
-    tic = time.time()
     test()
-    toc = time.time()
-    print(toc-tic)

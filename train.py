@@ -16,7 +16,7 @@ from model.convert_model import convert_res50, convert_shuffle_net
 def train(epoch):
     print('\nEpoch: %d' % epoch)
     net.train()
-    # net.freeze_bn()
+    net.freeze_bn()
     train_loss = 0
     for batch_idx, (inputs, loc_targets, cls_targets) in enumerate(trainloader):
         inputs = Variable(inputs).cuda() if use_gpu else Variable(inputs)
