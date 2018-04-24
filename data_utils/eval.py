@@ -15,11 +15,11 @@ from collections import defaultdict
 def voc_eval(pred_bboxes, pred_labels, pred_scores, gt_bboxes, gt_labels,
              gt_difficults=None, iou_thresh=0.5, use_07_metric=True):
     '''Wrap VOC evaluation for PyTorch.'''
-    pred_bboxes = [xy2yx(b).numpy() for b in pred_bboxes]
-    pred_labels = [label.numpy() for label in pred_labels]
-    pred_scores = [score.numpy() for score in pred_scores]
-    gt_bboxes = [xy2yx(b).numpy() for b in gt_bboxes]
-    gt_labels = [label.numpy() for label in gt_labels]
+    pred_bboxes = [xy2yx(b).cpu().numpy() for b in pred_bboxes]
+    pred_labels = [label.cpu().numpy() for label in pred_labels]
+    pred_scores = [score.cpu().numpy() for score in pred_scores]
+    gt_bboxes = [xy2yx(b).cpu().numpy() for b in gt_bboxes]
+    gt_labels = [label.cpu().numpy() for label in gt_labels]
     return eval_detection_voc(
                pred_bboxes, pred_labels, pred_scores, gt_bboxes,
                gt_labels, gt_difficults, iou_thresh, use_07_metric)
@@ -27,7 +27,6 @@ def voc_eval(pred_bboxes, pred_labels, pred_scores, gt_bboxes, gt_labels,
 
 def xy2yx(boxes):
     '''Convert box (xmin,ymin,xmax,ymax) to (ymin,xmin,ymax,xmax).'''
-    print(boxes.size())
     c0 = boxes[:, 0].clone()
     c2 = boxes[:, 2].clone()
     boxes[:, 0] = boxes[:, 1]

@@ -137,7 +137,7 @@ class FPN_ShuffleNet(nn.Module):
 
 def test():
     net = FPN_ShuffleNet()
-    fms = net(Variable(torch.randn(1, 3, 300, 300)))
+    fms = net(Variable(torch.randn(1, 3, 224, 224)))
     for fm in fms:
         print(fm.size())
 

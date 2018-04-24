@@ -9,7 +9,7 @@ from model.retina_shuffle import RetinaNet_Shuffle
 from model.retina_net import RetinaNet
 from data_utils.data_input import ListDataset
 from torch.autograd import Variable
-from model.convert_model import convert_res50, convert_shuffle_net
+from model.convert_model import convert_res50, convert_shuffle_net, convert_A_shuffle_net
 
 
 # Training
@@ -118,7 +118,8 @@ if __name__ == '__main__':
 
     # Model
     if args.model == 'shufflenet':
-        convert_shuffle_net(num_classes=args.num_classes)
+        # convert_shuffle_net(num_classes=args.num_classes)
+        convert_A_shuffle_net(num_classes=args.num_classes)
         net = RetinaNet_Shuffle(num_classes=args.num_classes)
         net.load_state_dict(torch.load('retina_net_shuffle.pth'))
     else:

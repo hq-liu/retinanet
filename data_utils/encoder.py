@@ -10,9 +10,12 @@ torch.set_printoptions(profile='full')
 
 
 class DataEncoder(object):
-    def __init__(self):
-        self.anchor_areas = [16*32., 32*64., 64*128., 128*256., 256*512.]  # p3 -> p7
-        self.aspect_ratios = [1/2., 1/1., 2/1.]
+    def __init__(self, use_gpu=False):
+        self.FloatTensor = torch.cuda.FloatTensor if use_gpu else torch.FloatTensor
+        self.LongTensor = torch.cuda.LongTensor if use_gpu else torch.LongTensor
+
+        self.anchor_areas = [24*24., 48*48., 96*96., 192*192., 384*384.]  # p3 -> p7
+        self.aspect_ratios = [1/4., 1/1., 4/1.]
         self.scale_ratios = [1., pow(2, 1/3.), pow(2, 2/3.)]
         self.anchor_wh = self._get_anchor_wh()
 
@@ -156,12 +159,12 @@ class DataEncoder(object):
           boxes: (tensor) decode box locations, sized [#obj,4].
           labels: (tensor) class labels for each box, sized [#obj,].
         """
-        CLS_THRESH = 0.2
+        CLS_THRESH = 0.3
         NMS_THRESH = 0.2
 
         input_size = torch.FloatTensor([input_size, input_size]) if isinstance(input_size, int)\
             else torch.FloatTensor(input_size)
-        anchor_boxes = self._get_anchor_boxes(input_size)  # xywh
+        anchor_boxes = self._get_anchor_boxes(input_size).type(self.FloatTensor)  # xywh
 
         loc_xy = loc_preds[:, :2]
         loc_wh = loc_preds[:, 2:]
@@ -174,15 +177,17 @@ class DataEncoder(object):
         ids = score > CLS_THRESH
         ids = ids.nonzero().squeeze()             # [#obj,]
         if len(ids) == 0:
-            return torch.FloatTensor([0, 0, 0, 0]).unsqueeze(0), torch.LongTensor([0,]), torch.LongTensor([0,])
-        keep = nms(boxes[ids], score[ids], threshold=NMS_THRESH)
+            return torch.FloatTensor([0, 0, 0, 0]).unsqueeze(0).type(self.FloatTensor), \
+                   torch.LongTensor([0, ]).type(self.LongTensor), \
+                   torch.LongTensor([0, ]).type(self.LongTensor)
+        keep = nms(boxes[ids], score[ids], threshold=NMS_THRESH).type(self.LongTensor)
         return boxes[ids][keep], labels[ids][keep], score[ids][keep]
 
 
 if __name__ == '__main__':
-    pass
-    # coder = DataEncoder()
-    # input_size = (300, 300)
-    # input_size = torch.FloatTensor(input_size)
-    # boxes = coder.get_anchor_boxes(input_size=input_size)
-    # print(boxes)
+    coder = DataEncoder()
+    input_size = 300
+    loc_pred = torch.ones(1, 4).cuda()
+    cls_pred = torch.ones(1, 4).cuda()
+    boxes = coder.decode(loc_pred, cls_pred, input_size)
+    print(boxes)

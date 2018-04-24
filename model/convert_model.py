@@ -72,3 +72,7 @@ def convert_shuffle_net(base_name='shufflenet.pth.tar', retina_name='retina_net_
     net.fpn.load_state_dict(dd)
     torch.save(net.state_dict(), retina_name)
     print('Done!')
+
+
+if __name__ == '__main__':
+    pass
