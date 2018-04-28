@@ -35,13 +35,14 @@ class RetinaNet(nn.Module):
         layers = []
         for _ in range(4):
             layers.append(nn.Conv2d(256, 256, kernel_size=3, stride=1, padding=1))
+            layers.append(nn.BatchNorm2d(256))
             layers.append(nn.ReLU(True))
         layers.append(nn.Conv2d(256, out_planes, kernel_size=3, stride=1, padding=1))
         return nn.Sequential(*layers)
 
     def freeze_bn(self):
         """Freeze BatchNorm layers."""
-        for layer in self.modules():
+        for layer in self.fpn.modules():
             if isinstance(layer, nn.BatchNorm2d):
                 layer.eval()
 

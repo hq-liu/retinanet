@@ -14,8 +14,8 @@ class DataEncoder(object):
         self.FloatTensor = torch.cuda.FloatTensor if use_gpu else torch.FloatTensor
         self.LongTensor = torch.cuda.LongTensor if use_gpu else torch.LongTensor
 
-        self.anchor_areas = [24*24., 48*48., 96*96., 192*192., 384*384.]  # p3 -> p7
-        self.aspect_ratios = [1/4., 1/1., 4/1.]
+        self.anchor_areas = [24*24., 48*48., 96*96., 256*256., 512*512.]  # p3 -> p7
+        self.aspect_ratios = [1/5., 1/1., 4/1.]
         self.scale_ratios = [1., pow(2, 1/3.), pow(2, 2/3.)]
         self.anchor_wh = self._get_anchor_wh()
 
@@ -159,7 +159,7 @@ class DataEncoder(object):
           boxes: (tensor) decode box locations, sized [#obj,4].
           labels: (tensor) class labels for each box, sized [#obj,].
         """
-        CLS_THRESH = 0.3
+        CLS_THRESH = 0.4
         NMS_THRESH = 0.2
 
         input_size = torch.FloatTensor([input_size, input_size]) if isinstance(input_size, int)\
